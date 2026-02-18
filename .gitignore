@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Env
+.env
+
+# Docker
+*.log
+volumes/
+
+# OS
+.DS_Store
+
+# Models / data
+models/
+data/
