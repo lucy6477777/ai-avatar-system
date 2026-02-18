@@ -1,0 +1,17 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command: ["--dev"]
+    ports:
+      - "7880:7880"
+      - "40000-40100:40000-40100/udp"
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    environment:
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+    ports:
+      - "8000:8000"
+    depends_on:
+      - livekit
