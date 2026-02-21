@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Join LiveKit (Local)</title>
+  </head>
+  <body>
+    <h3>Join LiveKit Room</h3>
+    <div>
+      Room: <input id="room" value="demo" /> Identity:
+      <input id="identity" value="lucy" />
+      <button id="join">Join</button>
+    </div>
+    <pre id="log">Not connected.</pre>
+
+    <!-- Load UMD version -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+
+    <script>
+      const logEl = document.getElementById("log");
+      const btn = document.getElementById("join");
+
+      function log(msg) {
+        logEl.textContent += "\n" + msg;
+      }
+
+      btn.onclick = async () => {
+        logEl.textContent = "";
+
+        const roomName = document.getElementById("room").value.trim();
+        const identity = document.getElementById("identity").value.trim();
+
+        const res = await fetch(
+          `/token?room=${encodeURIComponent(roomName)}&identity=${encodeURIComponent(identity)}`,
+        );
+        const data = await res.json();
+
+        const token = data.token;
+        const url = data.url;
+
+        log(`Connecting to ${url}...`);
+
+        // Access via global namespace
+        const room = new LivekitClient.Room();
+        room.prepareConnection(url, token);
+
+        room.on("connected", () => log("connected"));
+        room.on("disconnected", () => log("disconnected"));
+        room.on("participantConnected", (p) =>
+          log(`participant connected: ${p.identity}`),
+        );
+        room.on("participantDisconnected", (p) =>
+          log(`participant left: ${p.identity}`),
+        );
+
+        await room.connect(url, token);
+      };
+    </script>
+  </body>
+</html>

@@ -1,11 +1,4 @@
 services:
-  livekit:
-    image: livekit/livekit-server:latest
-    command: ["--dev"]
-    ports:
-      - "7880:7880"
-      - "40000-40100:40000-40100/udp"
-    restart: unless-stopped
   backend:
     build: ./backend
     environment:

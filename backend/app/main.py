@@ -1,11 +1,18 @@
 import os
 from fastapi import FastAPI, Query
 from livekit import api
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY", "devkey")
 LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET", "secret")
+
+@app.get("/")
+def serve_index():
+    return FileResponse("app/static/index.html")
 
 @app.get("/health")
 def health():
