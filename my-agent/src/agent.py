@@ -21,6 +21,17 @@ logger = logging.getLogger("agent")
 
 load_dotenv(".env.local")
 
+import os
+import logging
+
+logger = logging.getLogger("agent")
+
+def _is_set(k: str) -> str:
+    v = os.getenv(k)
+    return "SET" if (v and len(v) > 0) else "MISSING"
+
+logger.warning("ENV CHECK: TAVUS_API_KEY=%s", _is_set("TAVUS_API_KEY"))
+logger.warning("ENV CHECK: LIVEKIT_URL=%s", _is_set("LIVEKIT_URL"))
 
 class Assistant(Agent):
     def __init__(self) -> None:
@@ -107,12 +118,26 @@ async def my_agent(ctx: JobContext):
     # # Start the avatar and wait for it to join
     # await avatar.start(session, room=ctx.room)
     avatar = tavus.AvatarSession(
-        replica_id="r9fa0878977a",
-        persona_id="pd33123e314e",
+        replica_id="r6ae5b6efc9d",
+        persona_id="p1e1eb7f20e9",
         avatar_participant_name="Tavus-avatar-agent"
     )
+    import os, aiohttp, json
 
-    #await avatar.start(session, room=ctx.room)
+    async def tavus_debug_create_conversation(replica_id: str, persona_id: str):
+        url = "https://tavusapi.com/v2/conversations"
+        headers = {"Content-Type": "application/json", "x-api-key": os.environ["TAVUS_API_KEY"]}
+        payload = {
+            "replica_id": replica_id,
+            "persona_id": persona_id,
+            "conversation_name": "lk-debug",
+        }
+        async with aiohttp.ClientSession() as s:
+            async with s.post(url, headers=headers, json=payload) as r:
+                text = await r.text()
+                logger.error("TAVUS DEBUG status=%s body=%s", r.status, text[:800])
+    await tavus_debug_create_conversation("r6ae5b6efc9d", "p1e1eb7f20e9")
+    await avatar.start(session, room=ctx.room)
 
     # Start the session, which initializes the voice pipeline and warms up the models
     await session.start(
@@ -127,13 +152,8 @@ async def my_agent(ctx: JobContext):
                     else noise_cancellation.BVC()
                 ),
             ),
+            audio_output=True,
         ),
-        room_output_options=RoomOutputOptions(audio_enabled=False),
-    )
-
-    # Join the room and connect to the user
-    asyncio.create_task(
-        avatar.start(session, room=ctx.room)
     )
 
 if __name__ == "__main__":
