@@ -3,3 +3,6 @@
 
 [agent]
   id = "CA_wB7tuP3ffxMa"
+
+[secrets]
+  env = ".env.local"

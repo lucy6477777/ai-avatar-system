@@ -11,9 +11,11 @@ from livekit.agents import (
     cli,
     inference,
     room_io,
+    RoomOutputOptions
 )
 from livekit.plugins import noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
+from livekit.plugins import tavus
 
 logger = logging.getLogger("agent")
 
@@ -64,7 +66,7 @@ async def my_agent(ctx: JobContext):
     ctx.log_context_fields = {
         "room": ctx.room.name,
     }
-
+    await ctx.connect()
     # Set up a voice AI pipeline using OpenAI, Cartesia, Deepgram, and the LiveKit turn detector
     session = AgentSession(
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
@@ -104,6 +106,13 @@ async def my_agent(ctx: JobContext):
     # )
     # # Start the avatar and wait for it to join
     # await avatar.start(session, room=ctx.room)
+    avatar = tavus.AvatarSession(
+        replica_id="r9fa0878977a",
+        persona_id="pd33123e314e",
+        avatar_participant_name="Tavus-avatar-agent"
+    )
+
+    #await avatar.start(session, room=ctx.room)
 
     # Start the session, which initializes the voice pipeline and warms up the models
     await session.start(
@@ -119,11 +128,13 @@ async def my_agent(ctx: JobContext):
                 ),
             ),
         ),
+        room_output_options=RoomOutputOptions(audio_enabled=False),
     )
 
     # Join the room and connect to the user
-    await ctx.connect()
-
+    asyncio.create_task(
+        avatar.start(session, room=ctx.room)
+    )
 
 if __name__ == "__main__":
     cli.run_app(server)
